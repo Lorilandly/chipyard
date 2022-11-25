@@ -19,15 +19,16 @@ import sifive.blocks.devices.spi.{PeripherySPIKey, SPIPortIO}
 import chipyard.{HasHarnessSignalReferences, BuildTop, ChipTop, ExtTLMem, CanHaveMasterTLMemPort, DefaultClockFrequencyKey}
 import chipyard.iobinders.{HasIOBinders}
 import chipyard.harness.{ApplyHarnessBinders}
+import freechips.rocketchip.diplomacy.BundleBridgeSource
 
-class VC707FPGATestHarness(override implicit val p: Parameters) extends VC707Shell { outer =>
+class VC707FPGATestHarness(override implicit val p: Parameters) extends VC707Shell {
 
   def dp = designParameters
 
 
   // Order matters; ddr depends on sys_clock
-  val uart      = Overlay(UARTOverlayKey, new UARTVC707ShellPlacer(this, UARTShellInput()))
-  val pcie       = Overlay(PCIeOverlayKey, new PCIeVC707ShellPlacer(this, PCIeShellInput()))
+  val uart = Overlay(UARTOverlayKey, new UARTVC707ShellPlacer(this, UARTShellInput()))
+  val pcie = Overlay(VC707PCIeOverlayKey, new PCIeVC707ShellPlacer_placeholder(this, PCIeShellInput()))
 
   val topDesign = LazyModule(p(BuildTop)(dp)).suggestName("chiptop")
 
@@ -61,6 +62,10 @@ class VC707FPGATestHarness(override implicit val p: Parameters) extends VC707She
 
   val io_spi_bb = BundleBridgeSource(() => (new SPIPortIO(dp(PeripherySPIKey).head)))
   dp(SPIOverlayKey).head.place(SPIDesignInput(dp(PeripherySPIKey).head, io_spi_bb))
+  
+  /*** PCI ***/
+  val io_pcie_bb = BundleBridgeSource(() => (new XilinxVC707PCIeX1IO))
+  dp(VC707PCIeOverlayKey).head.place(VC707PCIeDesignInput(wrangler=dutWrangler.node, corePLL=harnessSysPLL, io_pcie_bb=io_pcie_bb))
 
   /*** DDR ***/
 

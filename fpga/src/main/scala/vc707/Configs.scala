@@ -42,10 +42,12 @@ class WithVC707Tweaks extends Config(
   // harness binders
   new WithVC707UARTHarnessBinder ++
   new WithVC707SPISDCardHarnessBinder ++
+  new WithVC707PCIeHarnessBinder ++
   new WithVC707DDRMemHarnessBinder ++
   // io binders
   new WithUARTIOPassthrough ++
   new WithSPIIOPassthrough ++
+  new WithPCIeIOPassthrough ++
   new WithTLIOPassthrough ++
   // other configuration
   new WithDefaultPeripherals ++

@@ -44,6 +44,16 @@ class WithSPIIOPassthrough  extends OverrideLazyIOBinder({
   }
 })
 
+class WithPCIeIOPassthrough extends OverrideIOBinder ({
+  (system: HasSystemXilinxVC707PCIeX1ModuleImp) => {
+    val io_pcie_pins_temp = system.vc707pcie.zipWithIndex.map { case (dio, i) => IO(dio.cloneType).suggestName(s"pcie_$i")}
+    (io_pcie_pins_temp zip system.vc707pcie).map { case (io, sysio) =>
+      io <> sysio
+    }
+    (io_pcie_pins_temp, Nil)
+  }
+})
+
 class WithTLIOPassthrough extends OverrideIOBinder({
   (system: CanHaveMasterTLMemPort) => {
     val io_tl_mem_pins_temp = IO(DataMirror.internal.chiselTypeClone[HeterogeneousBag[TLBundle]](system.mem_tl)).suggestName("tl_slave")

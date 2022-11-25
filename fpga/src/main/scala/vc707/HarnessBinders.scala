@@ -26,6 +26,13 @@ class WithVC707SPISDCardHarnessBinder extends OverrideHarnessBinder({
   }
 })
 
+/*** PCIe ***/
+class WithVC707PCIeHarnessBinder extends OverrideHarnessBinder({
+  (system: HasSystemXilinxVC707PCIeX1ModuleImp, th: VC707FPGATestHarness, ports: Seq[XilinxVC707PCIeX1IO]) => {
+    th.io_pcie_bb.bundle <> ports.head
+  }
+})
+
 /*** Experimental DDR ***/
 class WithVC707DDRMemHarnessBinder extends OverrideHarnessBinder({
   (system: CanHaveMasterTLMemPort, th: VC707FPGATestHarness, ports: Seq[HeterogeneousBag[TLBundle]]) => {
