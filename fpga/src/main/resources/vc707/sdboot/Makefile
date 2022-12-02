@@ -15,7 +15,7 @@ PBUS_CLK ?= 1000000UL # default to 1MHz but really should be overridden
 default: elf bin dump
 
 elf := $(BUILD_DIR)/sdboot.elf
-$(elf): head.S kprintf.c sd.c
+$(elf): head.S main.c sd/sd.c gpt/gpt.c spi/spi.c uart/uart.c clkutils/clkutils.c
 	mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) -DTL_CLK="$(PBUS_CLK)" $(LFLAGS) -o $@ $^
 
