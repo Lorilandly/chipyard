@@ -1,3 +1,5 @@
+// See LICENSE.Sifive for license details.
+
 #include <spi/spi.h>
 #include <sd/sd.h>
 #include <gpt/gpt.h>
@@ -31,9 +33,14 @@
 // Payload size in # of sectors
 #define PAYLOAD_SIZE (PAYLOAD_SIZE_B / SECTOR_SIZE_B)
 
+extern const gpt_guid gpt_guid_apple_apfs;
+
+
 void boot_fail(long code)
 {
   uint64_t error_code = code;
+  // TODO: Print error in plain text
+  puts("[ERROR] Refer to main.c for error codes");
   uart_puts((void*) UART0_CTRL_ADDR, "Error 0x");
   uart_put_hex((void*) UART0_CTRL_ADDR, error_code);
   /*
@@ -70,8 +77,10 @@ void boot_fail(long code)
 }
 
 
-int puts(const char * str){
+int puts(const char * str)
+{
 	uart_puts((void *) UART0_CTRL_ADDR, str);
+	uart_puts((void *) UART0_CTRL_ADDR, "\n\r");
 	return 1;
 }
 
@@ -171,19 +180,25 @@ static int load_sd_gpt_partition(spi_ctrl* spictrl, void* dst, const gpt_guid* p
 }
 
 
-int main(void) {
-  uart_puts((void*) UART0_CTRL_ADDR, "INIT");
+//------------------------------------------------------------------------------
+// Main
+//------------------------------------------------------------------------------
+
+int main(void)
+{
+  UART_REG(UART_REG_TXCTRL) = UART_TXEN;
+
+  puts("Loading from SD card...");
   spi_ctrl* spictrl = NULL;
   unsigned long peripheral_input_khz = F_CLK;
   unsigned int error = 0;
-  const gpt_guid partition_type_guid = {{
-    0x28, 0x73, 0x2a, 0xc1, 0x1f, 0xf8, 0xd2, 0x11, 0xba, 0x4b, 0x00, 0xa0, 0xc9, 0x3e, 0xc9, 0x3b
-  }};
 
   spictrl = (spi_ctrl*) SPI0_CTRL_ADDR;
   void *dst =  (void *)(PAYLOAD_DEST);
   error = initialize_sd(spictrl, peripheral_input_khz);
-  if (!error) error = load_sd_gpt_partition(spictrl, dst, &partition_type_guid);
+
+  // use the guid partition type for the partition you want to boot from
+  if (!error) error = load_sd_gpt_partition(spictrl, dst, &gpt_guid_apple_apfs);
   
   if (error) {
     boot_fail(error);

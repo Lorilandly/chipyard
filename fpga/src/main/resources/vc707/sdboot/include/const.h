@@ -1,7 +1,4 @@
-/* Copyright (c) 2018 SiFive, Inc */
-/* SPDX-License-Identifier: Apache-2.0 */
-/* SPDX-License-Identifier: GPL-2.0-or-later */
-/* See the file LICENSE for further information */
+// See LICENSE.Sifive for license details.
 
 #ifndef _SIFIVE_CONST_H
 #define _SIFIVE_CONST_H
