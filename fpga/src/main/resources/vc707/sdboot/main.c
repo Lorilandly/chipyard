@@ -1,5 +1,7 @@
 // See LICENSE.Sifive for license details.
 
+#include <stdarg.h>
+#include <stdint.h>
 #include <spi/spi.h>
 #include <sd/sd.h>
 #include <gpt/gpt.h>
@@ -77,11 +79,68 @@ void boot_fail(long code)
 }
 
 
+//------------------------------------------------------------------------------
+// Logging
+//------------------------------------------------------------------------------
+
 int puts(const char * str)
 {
 	uart_puts((void *) UART0_CTRL_ADDR, str);
 	uart_puts((void *) UART0_CTRL_ADDR, "\n\r");
 	return 1;
+}
+
+
+void kprintf(const char *fmt, ...)
+{
+  va_list lst;
+  va_start(lst, fmt);
+  while(*fmt!='\0')
+  {
+    if(*fmt!='%')
+    {
+      uart_putc((void *) UART0_CTRL_ADDR, *fmt++);
+      continue;
+    }
+    int32_t reg = 0;
+    switch(*++fmt)
+    {
+      case 's': uart_puts((void *) UART0_CTRL_ADDR, va_arg(lst, const char *)); break;
+      case 'c': uart_putc((void *) UART0_CTRL_ADDR, va_arg(lst, int)); break;
+      case 'l': reg+='l';
+      case 'h': reg+='h';
+      case 'x': {
+        unsigned long n;
+        long i;
+        switch(reg) {
+          case ('l'+'h'): {
+            n = va_arg(lst, unsigned long);
+			  		i = (sizeof(unsigned long) << 3) - 4;
+            break;
+          }
+          case 'h': {
+            n = va_arg(lst, unsigned int);
+					  i = 4;
+            break;
+          }
+          default: {
+            n = va_arg(lst, unsigned int);
+					  i = (sizeof(unsigned int) << 3) - 4;
+            break;
+          }
+        }
+        for (; i >= 0; i -= 4) {
+					long d;
+					d = (n >> i) & 0xF;
+					uart_putc((void *) UART0_CTRL_ADDR, d < 10 ? '0' + d : 'a' + d - 10);
+				}
+        reg = 0;
+        break;
+      }
+      case '\0': break;
+    }
+    fmt++;
+  }
 }
 
 
